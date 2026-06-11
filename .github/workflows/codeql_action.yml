@@ -1,4 +1,4 @@
-name: CodeQL Custom Query
+name: CodeQL Custom Query Analysis
 
 on:
   push:
@@ -11,17 +11,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v2
-        with:
-          languages: 'cpp'
-          queries: ./codeql/queries
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: 'cpp'
+        queries: ./codeql/queries
 
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v2
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libssl-dev bison flex
 
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v2
+    - name: Build U-Boot
+      run: |
+        make defconfig
+        make -j$(nproc)
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
